@@ -18,3 +18,4 @@ The authorization is based on a 'pattern' that relates a role name to a queue na
 This way you don't have to manually configure each queue authorization and yo can add queues dinamically withouth the need of re configuration
 
 
+
