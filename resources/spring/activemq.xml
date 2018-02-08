@@ -1,0 +1,26 @@
+<beans
+  xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+  http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
+   
+    
+    <bean id="authenticationSimpleHttpInvokerRequestExecutor"
+	   class="org.springframework.security.context.httpinvoker.AuthenticationSimpleHttpInvokerRequestExecutor">
+    </bean>
+	
+    <bean id="authenticationService" class="samples.activemq.security.plugins.QueueAuthenticationServiceSample">
+	</bean>	
+	
+	<bean id="pluginsConfigBean" class="samples.activemq.security.plugins.CustomSecurityConfig">
+		<property name="allGroup">
+			<value>all</value>
+		</property>
+
+		<property name="adminGroup">
+			<value>admin</value>
+		</property>
+	</bean>
+
+
+</beans>

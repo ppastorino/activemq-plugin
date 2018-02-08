@@ -1,0 +1,123 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+  http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
+
+	<bean
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>file:${activemq.conf}/activemq.security.properties</value>
+			</list>
+		</property>
+	</bean>
+
+	<!-- Allows accessing the server log -->
+	<bean id="logQuery" class="io.fabric8.insight.log.log4j.Log4jLogQuery"
+		lazy-init="false" scope="singleton" init-method="start"
+		destroy-method="stop">
+	</bean>
+
+	<bean id="pluginsConfigBean" class="samples.activemq.security.plugins.CustomSecurityConfig">
+
+		<property name="allGroup">
+			<value>${activemq.security.group.name.all}</value>
+		</property>
+
+		<property name="adminGroup">
+			<value>${activemq.security.group.name.admin}</value>
+		</property>
+
+		<property name="protocolException">
+				<list>
+					<!-- Security controls for this protocol is  by passed -->
+				</list>
+		</property>
+	</bean>
+
+	
+	
+	<broker xmlns="http://activemq.apache.org/schema/core"
+		brokerName="localhost" dataDirectory="${activemq.data}">
+
+		<destinationPolicy>
+			<policyMap>
+				<policyEntries>
+					<policyEntry topic=">">
+						<pendingMessageLimitStrategy>
+							<constantPendingMessageLimitStrategy
+								limit="1000" />
+						</pendingMessageLimitStrategy>
+					</policyEntry>
+				</policyEntries>
+			</policyMap>
+		</destinationPolicy>
+
+
+		<!--
+		|			
+		| Security Plugins 
+		|
+		-->
+		<plugins>
+			<bean id="authorizationPlugin" class="samples.activemq.security.plugins.CustomAuthorizationPlugin"
+				xmlns="http://www.springframework.org/schema/beans">
+				<property name="config">
+					<ref bean="pluginsConfigBean" />
+				</property>
+
+			</bean>
+
+			<bean id="authenticationPlugin" class="samples.activemq.security.plugins.CustomAuthenticationPlugin"
+				xmlns="http://www.springframework.org/schema/beans">
+		
+				<property name="authenticationService">
+					<bean class="samples.activemq.security.plugins.QueueAuthenticationServiceSample">
+					</bean>
+				</property>
+
+				<property name="config">
+					<ref bean="pluginsConfigBean" />
+				</property>
+
+			</bean>
+		</plugins>
+
+		<managementContext>
+			<managementContext createConnector="false" />
+		</managementContext>
+
+		<persistenceAdapter>
+			<kahaDB directory="${activemq.data}/kahadb" />
+		</persistenceAdapter>
+
+
+		<systemUsage>
+			<systemUsage>
+				<memoryUsage>
+					<memoryUsage percentOfJvmHeap="70" />
+				</memoryUsage>
+				<storeUsage>
+					<storeUsage limit="1 gb" />
+				</storeUsage>
+				<tempUsage>
+					<tempUsage limit="1 gb" />
+				</tempUsage>
+			</systemUsage>
+		</systemUsage>
+
+		<transportConnectors>
+			<transportConnector name="public" uri="${activemq.security.public.uri}" />
+		</transportConnectors>
+
+		<!-- destroy the spring context on shutdown to stop jetty -->
+		<shutdownHooks>
+			<bean xmlns="http://www.springframework.org/schema/beans" class="org.apache.activemq.hooks.SpringContextHook" />
+		</shutdownHooks>
+
+
+	</broker>
+
+	<import resource="jetty.xml" />
+
+</beans>
